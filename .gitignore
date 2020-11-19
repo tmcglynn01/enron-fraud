@@ -1,1 +1,6 @@
 data/
+.ipynb_checkpoints/
+__pycache__/
+plots/
+poi_id.py.ipynb
+preprocessing.ipynb
