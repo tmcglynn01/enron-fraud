@@ -1,0 +1,14 @@
+data/
+clean_data.py
+load_data.py
+main.py
+my_classifier.pkl
+my_dataset.pkl
+pipline.py
+plots/
+poi_id.py
+poi_id.py.ipynb
+preprocessing.ipynb
+reduce_dimensions.py
+requirements.txt
+responses.ipynb
