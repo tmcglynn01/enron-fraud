@@ -1,5 +1,5 @@
-import warnings
 import pandas as pd
+import numpy as np
 from sys import version_info
 
 # sklearn
@@ -7,12 +7,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import StratifiedShuffleSplit, GridSearchCV
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import RobustScaler, StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 # PLEASE USE PYTHON 
 assert version_info >= (3, 0)
-warnings.filterwarnings("ignore", category=RuntimeWarning) 
+#warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 
 ### Task 1: Select what features you'll use.
@@ -77,7 +77,7 @@ for trainidx, testidx in sss.split(X, y):
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 #model.get_params()['estimator__selector'].get_support(indices=True)
-robust = RobustScaler()
+robust = StandardScaler()
 pipeline = Pipeline([
     ('robust_scale', robust),
     ('selector', SelectKBest(f_regression)),
@@ -86,8 +86,9 @@ search = GridSearchCV(
     estimator = pipeline,
     param_grid = {'selector__k':[2,3,4], 
                   'model__n_estimators': range(70, 91, 5)},
-    n_jobs=-1, scoring='f1', cv=10)
-clf = search.fit(Xtrain,ytrain)
+    n_jobs=-1, scoring='f1')
+with np.errstate(divide='ignore',invalid='ignore'):
+    clf = search.fit(Xtrain,ytrain)
 
 print('Best params: ', search.best_params_)
 print('Best score: ', search.best_score_, '\n')
@@ -113,7 +114,9 @@ print('For tuning, please see pipeline.py')
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
+dfpickle = df.T.to_dict()
+featurepickle = np.insert(features,0,'poi')
 
 pd.to_pickle(clf, 'data/my_classifier.pkl')
-pd.to_pickle(df.T.to_dict(), 'data/my_dataset.pkl')
-pd.to_pickle(features, 'data/features_list.pkl')
+pd.to_pickle(dfpickle, 'data/my_dataset.pkl')
+pd.to_pickle(featurepickle, 'data/features_list.pkl')
