@@ -39,7 +39,7 @@ pipeline = Pipeline([
 search = GridSearchCV(
     estimator = pipeline,
     param_grid = {'selector__k':[2,3,4], 
-                  'model__n_estimators': range(60, 75, 5)},
+                  'model__n_estimators': [60, 100, 1000]},
     n_jobs=-1,
     scoring='f1',
     cv=10, verbose=3)

@@ -8,7 +8,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import StratifiedShuffleSplit, GridSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler, StandardScaler
 
 # PLEASE USE PYTHON 
 assert version_info >= (3, 0)
@@ -46,13 +46,22 @@ df.loc['BHATNAGAR SANJAY'] = [
     ]
 df = df.astype(float).fillna(0).astype(int)
 
+# Where are the missing values?
+df.eq(0).sum().sort_values().plot.bar()
+
 ### Task 3: Create new feature(s)
-print('New feature created: options_to_stock\n')
-df['options_to_stock'] = (df.exercised_stock_options/df.total_stock_value)
-df['options_to_stock'].fillna(0, inplace=True)
-df.drop(columns='total_stock_value', inplace=True)
+# print('New feature created: options_to_stock\n')
+# df['options_to_stock'] = (df.exercised_stock_options/df.total_stock_value)
+# df['options_to_stock'].fillna(0, inplace=True)
+# df.drop(columns='total_stock_value', inplace=True)
+# Drop noisy/less correlated data
+df.drop(columns=['to_messages', 'from_messages'], inplace=True)
+# Try taking abs for negative deferred_income
+df['deferred_income'] = abs(df.deferred_income)
 
 ### Extract features and labels from dataset for local testing
+print('Number of features of original df: ', len(df.columns))
+print('Persons of interest: ', sum(df.poi))
 X = df.copy()
 X, y = X.iloc[:,1:], X.iloc[:,0]
 sss = StratifiedShuffleSplit(test_size=0.4, random_state=42)
@@ -68,7 +77,7 @@ for trainidx, testidx in sss.split(X, y):
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 #model.get_params()['estimator__selector'].get_support(indices=True)
-robust = MinMaxScaler()
+robust = RobustScaler()
 pipeline = Pipeline([
     ('robust_scale', robust),
     ('selector', SelectKBest(f_regression)),
@@ -81,7 +90,7 @@ search = GridSearchCV(
 clf = search.fit(Xtrain,ytrain)
 
 print('Best params: ', search.best_params_)
-print('Best score: ', search.best_score_)
+print('Best score: ', search.best_score_, '\n')
 idx = search.best_estimator_['selector'].get_support(indices=True)
 predictions = clf.predict(Xtest)
 print('*'*60)
@@ -89,15 +98,6 @@ print(classification_report(ytest, predictions))
 print('*'*60, '\n')
 features = Xtrain.iloc[:,idx].columns.values
 print('Features used: ', features)
-
-# pipe = make_pipeline(MinMaxScaler(), 
-#                       SelectKBest(k=3, score_func=f_regression),
-#                       RandomForestClassifier(n_estimators=70))
-# clf = pipe.fit(Xtrain, ytrain)
-# predictions = clf.predict(Xtest)
-# print('*'*60)
-# print(classification_report(ytest, predictions))
-# print('*'*60, '\n')
 
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
